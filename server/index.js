@@ -46,12 +46,14 @@ app.delete("/api/delete/:id", (req, res) => {
 });
 
 app.put("/api/update", (req, res) => {
-  const id = req.body.id;
+  const first_name =  req.body.first_name;
+  const last_name = req.body.last_name;
   const email =  req.body.email;
+  const id = req.body.id;
 
   db.query(
-    "UPDATE mock_data SET email = ? WHERE id = ?",
-    [email, id],
+    "UPDATE mock_data SET first_name = ?, last_name = ?, email = ? WHERE id = ?",
+    [first_name, last_name, email, id],
     (err, result) => {
       if (err) {
         console.log(err);
@@ -60,6 +62,7 @@ app.put("/api/update", (req, res) => {
       }
     }
   );
+
 });
 
 app.listen(3001, () => {

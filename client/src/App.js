@@ -4,20 +4,23 @@ import 'bootstrap/dist/css/bootstrap.css';
 import './App.css';
 
 // Attention:
-import JSONDATA from './mock_data.json';
+// import JSONDATA from './mock_data.json';
 
 function App() {
 
   // Adicionar novo usuário:
-  // Nome
-  const [nameInput, setNameInput] = useState('');
-  // Email
-  const [emailInput, setEmailInput] = useState('');
+    // Nome
+    const [nameInput, setNameInput] = useState('');
+    // Email
+    const [emailInput, setEmailInput] = useState('');
+  ////
 
   // Variável para receber registros
   const [resgistersList, setRegistersList] = useState([]);
 
-  // Variável para atualizar email de um usuário existente
+  // Variáveis para atualizar dados de um usuário existente
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newLastName, setNewLastName] = useState('');
   const [newEmail, setNewEmail] = useState('');
 
   // Variável para pesquisa
@@ -25,7 +28,6 @@ function App() {
 
   // Obter lista de registros do DB
   useEffect(() => {
-    // ATTENTION:
     Axios.get("http://localhost:3001/mock_data").then((response) => {
       setRegistersList(response.data);
     });
@@ -46,19 +48,24 @@ function App() {
 
   // Deletar registro
   const deleteRegister = (id) => {
+    if (window.confirm("Are you sure you want to DELETE this register?")) {
+    } else {
+      console.log('Thing was not deleted from the database.');
+    }
     Axios.delete(`http://localhost:3001/api/delete/${id}`);
   };
 
   // Atualizar registro
   const updateRegister = (id) => {
-    Axios.put("http://localhost:3001/api/update", { email: newEmail, id: id }).then(
+    Axios.put("http://localhost:3001/api/update", { first_name: newFirstName, last_name: newLastName, email: newEmail, id: id }).then(
       (response) => {
         setRegistersList(
           resgistersList.map((val) => {
             return val.id === id
               ? {
                 id: val.id,
-                // first_name: val.first_name,
+                first_name: newFirstName,
+                last_name: newLastName,
                 email: newEmail,
               }
               : val;
@@ -66,20 +73,55 @@ function App() {
         );
       }
     );
+    refreshPage();
   };
 
-  function collapse(id) {
-    // console.log("Function collapse called, with value " + id);
-    let divName = `collapse${id}`;
-    let validation = document.getElementById(`collapse${id}`).style;
-    document.getElementById(divName).style.display = "block";
+/*   function collapse(id) {
+    // Armazena o id da div
+    let idName = `collapse${id}`;
+
+    // Recebe o estilo da div (none ou block)
+    let validation = document.getElementById(`collapse${id}`).style.display;
+
+    // Se o estilo estiver oculto, mostrá-lo; se o estilo estiver visível, ocultá-lo
+    if(validation === "none"){
+      document.getElementById(idName).style.display = "block";
+    } else if (validation === "block"){
+      document.getElementById(idName).style.display = "none";
+    }
+  }; */
+
+  function edit(id){
+    let validation = document.getElementById(`editFirst_name${id}`).style.display;
+
+    if(validation === "none"){
+      // tornar inputs visíveis
+      document.getElementById(`editFirst_name${id}`).style.display = "block";
+      document.getElementById(`editLast_name${id}`).style.display = "block";
+      document.getElementById(`editEmail${id}`).style.display = "block";
+
+      // tornar valores ocultos
+      document.getElementById(`first_name${id}`).style.display = "none";
+      document.getElementById(`last_name${id}`).style.display = "none";
+      document.getElementById(`email${id}`).style.display = "none";
+
+      // manejo dos botões
+      document.getElementById(`editButton${id}`).style.display = "none";
+      document.getElementById(`saveButton${id}`).style.display = "block";
+
+    }
   }
+
+  function refreshPage(){
+    window.location.reload(false);
+  };
 
   return (
     <div className="App">
       <div className="container">
         <h1 className="title text-center mt-3 mb-3">SudoSuCRUD</h1>
 
+        <h2>Add Register</h2>
         <div className="input-group mb-3">
           <div className="input-group-prepend">
             <span className="input-group-text" id="basic-addon1">Name</span>
@@ -104,9 +146,10 @@ function App() {
 
         {/* SEARCH */}
 
-        <div className="input-group mb-3">
+        <h2>Search</h2>
+        <div className="input-group mb-5">
           <div className="input-group-prepend">
-            <span className="input-group-text" id="basic-addon1">Search:</span>
+            <span className="input-group-text" id="basic-addon1">Name:</span>
           </div>
           <input
             className="form-control"
@@ -124,13 +167,14 @@ function App() {
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">Name</th>
+              <th scope="col">First Name</th>
+              <th scope="col">Last Name</th>
               <th scope="col">Email</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {JSONDATA.filter((val) => {
+            {resgistersList.filter((val) => {
               if (setSearch === "") {
                 return val;
               } else if (val.first_name.toLocaleLowerCase().includes(search.toLocaleLowerCase())) {
@@ -140,22 +184,58 @@ function App() {
               return (
                 <tr>
                   <th scope="row">{val.id}</th>
-                  <td>{val.first_name}</td>
-                  <td>{val.email}</td>
+                  <td>
+                    <div id={`first_name${val.id}`}>
+                      {val.first_name}
+                    </div>
+
+                    <div id={`editFirst_name${val.id}`} style={{ display: "none" }}>
+                      <input type="text" className="form-control" style={{width: "auto"}} defaultValue={`${val.first_name}`} aria-label="" aria-describedby="basic-addon2" onChange={(e) => {
+                        setNewFirstName(e.target.value)
+                      }} />
+                    </div>
+                  </td>
+                  <td>
+                    <div id={`last_name${val.id}`}>
+                      {val.last_name}
+                    </div>
+
+                    <div id={`editLast_name${val.id}`} style={{ display: "none" }}>
+                      <input type="text" className="form-control" style={{width: "auto"}} defaultValue={`${val.last_name}`} aria-label="" aria-describedby="basic-addon2" onChange={(e) => {
+                        setNewLastName(e.target.value)
+                      }} />
+                    </div>
+                  </td>
+                  <td>
+                    <div id={`email${val.id}`}>
+                      {val.email}
+                    </div>
+                    
+                    <div id={`editEmail${val.id}`} style={{ display: "none" }}>
+                      <input type="text" className="form-control" style={{width: "auto"}} defaultValue={`${val.email}`} aria-label="" aria-describedby="basic-addon2" onChange={(e) => {
+                        setNewEmail(e.target.value)
+                      }} />
+                    </div>
+                  </td>
                   <td>
                     <div className="d-flex justify-content-around">
                       <button type="button" className="btn btn-danger" onClick={() => { deleteRegister(val.id) }}>&#128465;</button>
-                      <button type="button" className="btn btn-warning " onClick={() => { collapse(val.id) }}>&#9999;</button>
-                    </div>
-
-                    <div id={`collapse${val.id}`} style={{ display: "none" }}>
-                      <div className="d-flex justify-content-between">
-                        <input type="text" className="form-control" placeholder="example@email.com" aria-label="" aria-describedby="basic-addon2" onChange={(e) => {
-                          setNewEmail(e.target.value)
-                        }} />
-                        <button className="btn btn-success" type="button" onClick={() => { updateRegister(val.id) }}>V</button>
+                      <div id={`editButton${val.id}`} style={{ display: "block" }}>
+                        <button type="button" className="btn btn-warning " onClick={() => { edit(val.id) }}>&#9999;</button>
+                      </div>
+                      <div id={`saveButton${val.id}`} style={{ display: "none" }}>
+                        <button type="button" className="btn btn-success " onClick={() => { updateRegister(val.id) }}>&#10003;</button>
                       </div>
                     </div>
+
+                    {/* <div id={`collapse${val.id}`} style={{ display: "none" }}>
+                      <div className="d-flex ">
+                        <input type="text" className="form-control" style={{width: "auto"}} placeholder="example@email.com" aria-label="" aria-describedby="basic-addon2" onChange={(e) => {
+                          setNewEmail(e.target.value)
+                        }} />
+                        <button className="btn btn-success" type="button" onClick={() => { updateRegister(val.id) }}>&#10003;</button>
+                      </div>
+                    </div> */}
                   </td>
                 </tr>
               )
@@ -163,36 +243,6 @@ function App() {
             }
           </tbody>
         </table>
-
-
-
-        {/* OLD CARDS */}
-        {/* <div className="row d-flex justify-content-around">
-          {resgistersList.map((val) => {
-            return(
-              <div className="col-md-5 mb-5 card text-white bg-primary">
-                <div className="card-header">
-                  <h5 className="card-title text-center">{val.title}</h5>
-                </div>
-                <div className="card-body mb-1">
-                  <p className="card-text">{val.description}</p>
-                </div>
-                <div className="input-group mb-3">
-                  <input type="text" className="form-control" placeholder="" aria-label="" aria-describedby="basic-addon2"onChange={(e) => {
-                    setNewEmail(e.target.value)
-                  }}/>
-                  <div className="input-group-append">
-                    <button className="btn btn-warning" type="button" onClick={() => {updateRegister(val.id)}}>&#9999;</button>
-                  </div>
-                </div>
-
-                <div className="d-flex justify-content-center">
-                  
-                </div>
-              </div>
-            )
-          })}
-        </div> */}
       </div>
     </div>
   );
@@ -200,4 +250,7 @@ function App() {
 
 export default App;
 
-// FLLOWING THIS TUTORIAL: https://www.youtube.com/watch?v=T8mqZZ0r-RA
+/* Roteiro:
+  -exibir demais campos &&
+  -função editar: substituir o txt pelo input com o valor do prórpio
+*/
